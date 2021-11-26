@@ -17,10 +17,6 @@ namespace Signature
         public int sizeBlock
         { get; set; }
 
-        [Option('t', "time", HelpText = "Print time of work program.", DefaultValue = false)]
-        public bool PrintTime
-        { get; set; }
-
         [HelpOption]
         public string GetUsage()
         {
