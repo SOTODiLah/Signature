@@ -12,9 +12,9 @@ git clone git://github.com/SOTODiLah/Signature.git
 
 ## Download program
 
-* Google Drive [ZIP](https://drive.google.com/file/d/1tq0cHJbpeGzyw037pOkateuB449ayy3r/view?usp=sharing) - только программа.
+* Google Drive [ZIP](https://drive.google.com/file/d/1p2dYpFKVYu_6ZkUlfo4zIWtGUx17s0XD/view?usp=sharing) - только программа.
 
-* Google Drive [ZIP](https://drive.google.com/file/d/1e9N8Ed5F9gMRFeKAb3ezXsms_JB9sP7p/view?usp=sharing) - программа и тестовый файл 1gb.
+* Google Drive [ZIP](https://drive.google.com/file/d/15rpFz3mtOxOduaAg9ZPg-sQpKeXg4dIJ/view?usp=sharing) - программа и тестовый файл 1gb.
 
 ## Launch
 
