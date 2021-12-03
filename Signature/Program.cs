@@ -74,7 +74,7 @@ namespace Signature
             // закрытие потоков файлов
             this.DisposeStreams();
             stopwatch.Stop();
-            Console.WriteLine("Time work {0}", stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Time work {0} milliseconds", stopwatch.ElapsedMilliseconds);
         }
 
         // функция уничтожения потоков в преждевременного закрытия программы
