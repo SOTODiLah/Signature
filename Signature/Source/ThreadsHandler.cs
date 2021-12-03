@@ -54,6 +54,8 @@ namespace Signature.Source
         // Исполнения сигнатуры файла
         public bool Run()
         {
+            // Инициализация потоков обработчиков в классе обработчик блоков
+            this.blocksHandler.Init<Hasher>();
             // Запуск процесса создания сигнатуры файла
             this.Process();
             return !isAborder;

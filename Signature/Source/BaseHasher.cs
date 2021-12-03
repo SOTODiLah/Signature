@@ -26,6 +26,8 @@ namespace Signature.Source
         // Метод получения массива байтов хэша из массива байтов данных
         protected byte[] GetHash(byte[] input)
         {
+            if (hashAlgorithm == null)
+                return null;
             return this.hashAlgorithm.ComputeHash(input);
         }
     }

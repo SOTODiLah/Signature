@@ -52,17 +52,22 @@ namespace Signature.Source
             this.workers = new Thread[threadsCount];
 
             isRun = false;
-            // Создание дополнительных потоков для обработки блоков
-            for (int i = 0; i < threadsCount; i++)
-            {
-                this.workers[i] = new Thread(() => Run());
-                this.workers[i].Priority = ThreadPriority.Lowest;
-            }
+            
             this.callback = callback;
         }
 
+        // Создание дополнительных потоков для обработки блоков
+        public void Init<T>() where T : BaseHasher, new()
+        {
+            for (int i = 0; i < this.workers.Length; i++)
+            {
+                this.workers[i] = new Thread(() => Run<T>());
+                this.workers[i].Priority = ThreadPriority.Lowest;
+            }
+        }
+
         // Старт обработки блоков
-        public void Start()
+        public void Start() 
         {
             isRun = true;
             for (int i = 0; i < this.workers.Length; i++)
@@ -83,10 +88,10 @@ namespace Signature.Source
         }
 
         // Функция испольнитель для потоков обработки блоков
-        private void Run()
+        private void Run<T>() where T : BaseHasher, new()
         {
             // Объкта хэширования блоков
-            BaseHasher hasher = new Hasher();
+            BaseHasher hasher = new T();
             // бесконечный цикл пока блоки поступают в обработчик
             while (true)
             {
