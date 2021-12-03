@@ -47,14 +47,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Options.cs" />
+    <Compile Include="Source\BaseHasher.cs" />
     <Compile Include="Source\Block.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\BlocksHandler.cs" />
     <Compile Include="Source\Hasher.cs" />
     <Compile Include="Source\Reader.cs" />
+    <Compile Include="Source\ReaderThread.cs" />
     <Compile Include="Source\ThreadsHandler.cs" />
     <Compile Include="Source\Writer.cs" />
+    <Compile Include="Source\WriterThread.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

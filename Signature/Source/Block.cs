@@ -9,6 +9,8 @@
         public int BlockSize { get; set; }
         // Массив байтов данных из файла
         public byte[] Data { get; set; }
+        // Размер хэша в байтах
+        public int HashSize { get; set; }
         // Массив байтов хэша данных из файла
         public byte[] Hash { get; set; }
     }

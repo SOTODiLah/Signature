@@ -4,34 +4,23 @@ using System.Security.Cryptography;
 
 namespace Signature.Source
 {
-    // Класс для хэширования блока
-    class Hasher
+    // Класс для хэширования блока хэшем MD5 
+    class Hasher : BaseHasher
     {
-        // Объект для создания хэша MD5
-        private readonly MD5 md5;
-
-        // Коструктор класс хэшера
-        public Hasher()
+        // Конструктор класса для хэширования блока хэшем MD5. Передаём конструктору базового класса наследника хэш-алгоритма
+        public Hasher() : base(new MD5CryptoServiceProvider())
         {
-            this.md5 = new MD5CryptoServiceProvider();
         }
-
-        // Функция хэширования блока
-        public void Action(Block block)
+        
+        // Переопределение функции хэширования блока
+        public override void GetHashBlock(Block block)
         {
             block.Hash = this.GetHash(block.Data);
+            block.HashSize = HashSize;
         }
 
-        // Функция получения массива байтов хэша из массива байтов данных
-        public byte[] GetHash(byte[] input)
-        {
-            return this.md5.ComputeHash(input);
-        }
+        // Переопределение функции получения размера хэша
+        protected override int HashSize { get { return 16; } }
 
-        // Функция получения размера хэша
-        public static int GetHashSize()
-        {
-            return 16;
-        }
     }
 }

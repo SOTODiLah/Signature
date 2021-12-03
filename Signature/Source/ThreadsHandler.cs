@@ -8,56 +8,52 @@ namespace Signature.Source
     // Класс потоков обработчиков
     class ThreadsHandler
     {
-        // переменная размера блока
-        protected int blockSize;
-
-        // поток ввода файла
-        protected readonly Stream inputStream;
-
-        // поток вывода файла
-        protected readonly Stream outputStream;
-
         // объект читателя из файла
-        protected Reader reader;
+        protected ReaderThread readerThread;
 
         // объект писателя в файл
-        protected Writer writer;
+        protected WriterThread writerThread;
 
         // объект обработчика блоков
         private BlocksHandler blocksHandler;
 
-        // Запусщена ли?
-        private bool isRun;
-
         // Завершена ли?
         private bool isAborder;
-
-        // Дополнительный поток для читателя
-        private Thread readerThread;
-
-        // Дополнительный поток для писателя
-        private Thread writerThread;
 
         // Коструктор класса потоков обработчиков
         public ThreadsHandler(Stream inputStream, Stream outputStream, int blockSize)
         {
-            this.inputStream = inputStream;
-            this.outputStream = outputStream;
-            this.blockSize = blockSize;
-            reader = new Reader(inputStream, blockSize);
-            writer = new Writer(outputStream, Hasher.GetHashSize());
+            // Инициализация обработчика блоков. Тернарная операция вычисления потоков для обработки блоков. Лямбда-функция сообщения об ошибки и завершения работы потоков.
+            this.blocksHandler = new BlocksHandler(Environment.ProcessorCount > 2 ? Environment.ProcessorCount - 2 : Environment.ProcessorCount, str =>
+            {
+                Console.WriteLine(str);
+                this.Abort();
+            });
+            
+            /**
+            **  Инициализация класса потока читателя. 
+            **  Первая лямбда-функция содержит в себе метод объекта класса обработчика блоков. 
+            **  Вторая лямбда-функция изменяет состояние логической переменной "Завершена ли?".
+            **/
+            this.readerThread = new ReaderThread(inputStream, blockSize, block =>
+            {
+                this.blocksHandler.AddUnhandledBlock(block);
+            }, aborder =>
+            {
+                isAborder = aborder;
+            });
+
+            // Инициализация класса потока писателя. Лямбда-функция сообщения об ошибке при инициализации читателя.
+            this.writerThread = new WriterThread(outputStream, str =>
+            {
+                Console.WriteLine(str);
+                this.Abort();
+            }, this.blocksHandler.GetHandledBlocks);
         }
 
         // Исполнения сигнатуры файла
         public bool Run()
         {
-            // Создание обработчка блоков (количество задействованых потоков - 2, читатель и писатель), лямбда возвратной функции
-            this.blocksHandler = new BlocksHandler(Environment.ProcessorCount - 2, s =>
-            {
-                Console.WriteLine(s);
-                this.Abort();
-            });
-
             // Запуск процесса создания сигнатуры файла
             this.Process();
             return !isAborder;
@@ -67,79 +63,23 @@ namespace Signature.Source
         // Функция создания потоков и последующего их завершения
         private void Process()
         {
-            this.readerThread = new Thread(ReadBlockFromFile);
-            this.readerThread.Priority = ThreadPriority.AboveNormal;
-
-            this.writerThread = new Thread(GetBlockAndWriteToFile);
-            this.writerThread.Priority = ThreadPriority.AboveNormal;
-
+            // Первым запускается поток читателя
             this.readerThread.Start();
+
+            // После запускается поток обработчика блоков
             this.blocksHandler.Start();
 
-            this.isRun = true;
+            // Затем запускается поток писателя
             this.writerThread.Start();
+
+            // Присоеднияем поток читателя к текущему потоку и ожидаем завершения работы читателя
             this.readerThread.Join();
+
+            // После завершения работы читателя, присоединяем обработчик блоков и останавлияем работу в случае отсутсвия блоков в очереди.
             this.blocksHandler.Stop();
-            this.isRun = false;
+
+            // Присоединяем поток писателя к текущему потоку и ожидаем завершения работы читателя
             this.writerThread.Join();
-        }
-
-        // Функция читателя блоков из файла
-        private void ReadBlockFromFile()
-        {
-            // получение размера файла
-            long streamLength = this.inputStream.Length;
-
-            // цикл чтения из файла пока он не закончился
-            while (streamLength - 1 > this.inputStream.Position)
-            {
-                // отлов исключений при чтении
-                try
-                {
-                    // Чтение одного блока из файла
-                    Block nextBlock = this.reader.GetNextBlock();
-
-                    // Добавление необработнного блока в обработчик блок
-                    this.blocksHandler.AddUnhandledBlock(nextBlock);
-                }
-                catch (ArgumentOutOfRangeException e)
-                {
-                    this.isAborder = true;
-                    Console.WriteLine("Block reading fail. Reading of input file are stoped.{0}", e.Message);
-                    return;
-                }
-                catch (ThreadAbortException e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-            }
-        }
-
-        // Функция писателя блоков в файл
-        private void GetBlockAndWriteToFile()
-        {
-            // Лист обработанных блоков
-            List<Block> blocks;
-
-            // Цикл получения блоков и запись в файл пока работает читатель
-            do
-            {
-                blocks = this.blocksHandler.GetHandledBlocks();
-                for (int i = 0; i < blocks.Count; i++)
-                {
-                    this.writer.WriteBlock(blocks[i]);
-                    this.outputStream.Flush();
-                }
-
-            } while (this.isRun);
-
-            // Запись оставшихся обработанных блоков
-            blocks = this.blocksHandler.GetHandledBlocks();
-            for (int i = 0; i < blocks.Count; i++)
-            {
-                this.writer.WriteBlock(blocks[i]);
-                this.outputStream.Flush();
-            }
         }
 
         // Функция завершения потоков
@@ -149,7 +89,7 @@ namespace Signature.Source
 
             if (this.readerThread != null)
             {
-                this.readerThread.Abort();
+                this.readerThread.Stop();
             }
 
             if (this.blocksHandler != null)
@@ -159,7 +99,7 @@ namespace Signature.Source
 
             if (this.writerThread != null)
             {
-                this.writerThread.Abort();
+                this.writerThread.Stop();
             }
         }
     }

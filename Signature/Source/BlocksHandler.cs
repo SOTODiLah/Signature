@@ -8,6 +8,8 @@ namespace Signature.Source
     // Обработчик блоков
     class BlocksHandler
     {
+        // Поступают ли блоки? Идёт работа?
+        bool isRun;
         // Объект для блокировки доступа к очереди введённых блоков
         private readonly object inputLockObject;
 
@@ -49,6 +51,7 @@ namespace Signature.Source
 
             this.workers = new Thread[threadsCount];
 
+            isRun = false;
             // Создание дополнительных потоков для обработки блоков
             for (int i = 0; i < threadsCount; i++)
             {
@@ -61,6 +64,7 @@ namespace Signature.Source
         // Старт обработки блоков
         public void Start()
         {
+            isRun = true;
             for (int i = 0; i < this.workers.Length; i++)
             {
                 this.workers[i].IsBackground = true;
@@ -71,11 +75,7 @@ namespace Signature.Source
         // Стоп обработки блоков
         public void Stop()
         {
-            lock (this.inputLockObject)
-            {
-                for (int i = 0; i < this.workers.Length; i++)
-                    this.input.Enqueue(null);
-            }
+            isRun = false;
             foreach (var w in this.workers)
             {
                 w.Join();
@@ -85,9 +85,8 @@ namespace Signature.Source
         // Функция испольнитель для потоков обработки блоков
         private void Run()
         {
-            // Объкт хэширования блоков
-            Hasher hasher = new Hasher();
-
+            // Объкта хэширования блоков
+            BaseHasher hasher = new Hasher();
             // бесконечный цикл пока блоки поступают в обработчик
             while (true)
             {
@@ -103,8 +102,13 @@ namespace Signature.Source
                         {
                             block = this.input.Dequeue();
                             // Завершение работы потока
-                            if (block == null)
+                            if (block.Data == null)
                                 return;
+                        }
+                        // Завершение работы потока при условии что блоки больше не поступают и очередь пустая
+                        else if (!isRun)
+                        {
+                            return;
                         }
                     }
                     // Сообщение о добавлении необработнного блока
@@ -114,13 +118,13 @@ namespace Signature.Source
                     if (block != null)
                     {
                         // Хэширования блока и добавление в очередь
-                        hasher.Action(block);
+                        hasher.GetHashBlock(block);
                         this.AddHandledBlock(block);
                     }
                     else
                     {
-                        // Ожидания необработанных блоков 100 миллисекунд
-                        this.getMutexUnhandledBlock.WaitOne(100);
+                        // Ожидания необработанных блоков 1 миллисекунд
+                        this.getMutexUnhandledBlock.WaitOne(1);
                     }
                 }
                 // Исключение о завершении потока

@@ -7,7 +7,7 @@ namespace Signature.Source
     class Reader
     {
         // Поток ввода из файла
-        private readonly Stream stream;
+        protected readonly Stream stream;
 
         // Размер блока
         private readonly int blockSize;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Signature.Source;
+using System.Diagnostics;
 
 namespace Signature
 {
@@ -61,7 +62,8 @@ namespace Signature
                 Console.WriteLine(0);
                 return;
             }
-
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             this.threadsHandler = null;
             this.threadsHandler = new ThreadsHandler(inputStream, outputStream, options.sizeBlock);
 
@@ -71,6 +73,8 @@ namespace Signature
 
             // закрытие потоков файлов
             this.DisposeStreams();
+            stopwatch.Stop();
+            Console.WriteLine("Time work {0}", stopwatch.ElapsedMilliseconds);
         }
 
         // функция уничтожения потоков в преждевременного закрытия программы
