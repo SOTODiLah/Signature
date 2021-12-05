@@ -39,6 +39,7 @@ namespace Signature.Source
                 // Присутсвуется ли возвратная функция?
                 if (this.callbackAborder != null)
                     this.callbackAborder("Writer can't get blocks");
+                return; 
             }
             // Работаем..
             this.isRun = true;

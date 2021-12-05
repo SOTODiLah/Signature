@@ -35,6 +35,7 @@ namespace Signature.Source
                 // Присутсвует ли возвратная функция сообщения состояния потока
                 if (this.callbackAborder != null)
                     this.callbackAborder(true);
+                return;
             }
             // Запуск потока читателя
             thread.Start();
